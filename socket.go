@@ -43,11 +43,12 @@ func (s *Socket) Init() (err error) {
 		return
 	}
 
+	//创建ws连接后,会先收到一个server发来的消息
 	err = s.checkFirstReceivedMessage()
 	if err != nil {
 		return
 	}
-	s.generateSessionID()
+	s.generateSessionID() //随后创建一个sessionid,后续每次都用这个来开启session
 
 	err = s.sendConnectionSetupMessages()
 	if err != nil {
@@ -69,8 +70,12 @@ func (s *Socket) Close() (err error) {
 
 // AddSymbol ...
 func (s *Socket) AddSymbol(symbol string) (err error) {
+
+	ccc := getSocketMessage("quote_add_symbols", []interface{}{s.sessionID, symbol}) //, getFlags()})
+	//fmt.Printf("=====>%s\n", ccc)
+
 	err = s.sendSocketMessage(
-		getSocketMessage("quote_add_symbols", []interface{}{s.sessionID, symbol, getFlags()}),
+		ccc, //getSocketMessage("quote_add_symbols", []interface{}{s.sessionID, symbol, getFlags()}),
 	)
 	return
 }
@@ -101,6 +106,7 @@ func (s *Socket) checkFirstReceivedMessage() (err error) {
 		return
 	}
 
+	//从中拿到sessionid
 	if p["session_id"] == nil {
 		err = errors.New("cannot recognize the first received message after establishing the connection")
 		s.onError(err, FirstMessageWithoutSessionIdErrorContext)
@@ -110,6 +116,7 @@ func (s *Socket) checkFirstReceivedMessage() (err error) {
 	return
 }
 
+// 创建一个session_id
 func (s *Socket) generateSessionID() {
 	s.sessionID = "qs_" + GetRandomString(12)
 }
@@ -118,7 +125,7 @@ func (s *Socket) sendConnectionSetupMessages() (err error) {
 	messages := []*SocketMessage{
 		getSocketMessage("set_auth_token", []string{"unauthorized_user_token"}),
 		getSocketMessage("quote_create_session", []string{s.sessionID}),
-		getSocketMessage("quote_set_fields", []string{s.sessionID, "lp", "volume", "bid", "ask"}),
+		getSocketMessage("quote_set_fields", []string{s.sessionID, "lp_time", "lp", "volume", "bid", "ask"}),
 	}
 
 	for _, msg := range messages {
