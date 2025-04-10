@@ -3,11 +3,10 @@ package tradingview
 import (
 	"encoding/json"
 	"errors"
-	"net/http"
-	"strconv"
-
 	"github.com/gorilla/websocket"
 	"github.com/mitchellh/mapstructure"
+	"net/http"
+	"strconv"
 )
 
 // Socket ...
